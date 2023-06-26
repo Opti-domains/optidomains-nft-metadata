@@ -1,4 +1,4 @@
-module github.com/optidomains/optidomains-nft-metadata
+module github.com/opti-domains/optidomains-nft-metadata
 
 go 1.19
 
