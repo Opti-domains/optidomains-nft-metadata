@@ -34,7 +34,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{
 			"name":          "Bored Town Domains",
 			"description":   ".town Domains by Opti.Domains X Bored Town for Bored Town holders",
-			"image":         "https://metadata.opti.domains/images/domains/town/.town.svg",
+			"image":         "https://metadata.opti.domains/images/domains/town.png",
 			"external_link": "https://town.opti.domains",
 		})
 	})
@@ -43,7 +43,7 @@ func main() {
 		c.JSON(http.StatusOK, gin.H{
 			"name":          "Opti.Domains",
 			"description":   ".op Domains by Opti.Domains for Optimism and OP stack ecosystems",
-			"image":         "https://metadata.opti.domains/images/domains/optidomains.svg",
+			"image":         "https://metadata.opti.domains/images/domains/op.png",
 			"external_link": "https://opti.domains",
 		})
 	})
@@ -52,11 +52,20 @@ func main() {
 		id := c.Param("id")
 
 		if strings.HasPrefix(id, "town") {
-			id = strings.TrimPrefix(id, "town")
+			name, err := getDomainNameFromId(strings.TrimPrefix(id, "town"))
+
+			if err != nil {
+				if err.Error() == "not found" {
+					c.AbortWithStatus(http.StatusNotFound)
+				} else {
+					c.AbortWithStatus(http.StatusBadRequest)
+				}
+			}
+
 			c.JSON(http.StatusOK, gin.H{
-				"name":         "chomtana.town",
+				"name":         name,
 				"description":  ".town Domains by Opti.Domains X Bored Town for Bored Town holders",
-				"image":        "https://metadata.opti.domains/images/domains/town/chomtana.town.svg",
+				"image":        "https://metadata.opti.domains/images/domains/town/" + name + ".svg",
 				"external_url": "https://town.opti.domains",
 			})
 		} else {
@@ -65,6 +74,8 @@ func main() {
 	})
 
 	// Render images
+	r.StaticFile("/images/domains/town.png", "images/domains/town/avatar.png")
+
 	r.GET("/images/domains/town/:name", func(c *gin.Context) {
 		name := c.Param("name")
 
@@ -75,10 +86,28 @@ func main() {
 
 		name = strings.TrimSuffix(name, ".svg")
 
-		c.Render(http.StatusOK, render.Data{
-			ContentType: "image/svg+xml",
-			Data:        []byte(TOWN_DOMAINS_PREFIX + name + TOWN_DOMAINS_SUFFIX),
-		})
+		if len(name) > 22 {
+			var prefix string
+
+			if len(name) <= 28 {
+				prefix = strings.ReplaceAll(TOWN_DOMAINS_PREFIX, "font-size: 360px;", "font-size: 280px;")
+			} else if len(name) <= 40 {
+				prefix = strings.ReplaceAll(TOWN_DOMAINS_PREFIX, "font-size: 360px;", "font-size: 200px;")
+			} else {
+				name = name[:35] + "....town"
+				prefix = strings.ReplaceAll(TOWN_DOMAINS_PREFIX, "font-size: 360px;", "font-size: 180px;")
+			}
+
+			c.Render(http.StatusOK, render.Data{
+				ContentType: "image/svg+xml",
+				Data:        []byte(prefix + name + TOWN_DOMAINS_SUFFIX),
+			})
+		} else {
+			c.Render(http.StatusOK, render.Data{
+				ContentType: "image/svg+xml",
+				Data:        []byte(TOWN_DOMAINS_PREFIX + name + TOWN_DOMAINS_SUFFIX),
+			})
+		}
 	})
 
 	r.Run("0.0.0.0:1888")
