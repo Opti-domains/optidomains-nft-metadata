@@ -1,0 +1,8 @@
+version: '3'
+services:
+  optidomains-nft-metadata:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - 1888:1888
